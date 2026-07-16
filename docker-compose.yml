@@ -1,0 +1,50 @@
+# docker-compose.yml
+services:
+  controller:
+    build: .
+    container_name: controller
+    restart: unless-stopped
+    profiles: ["controller"]
+    command: "python controller.py"
+
+    # we want to use the mqtt sender, the batteries, and fritzbox 
+    # this means that there is no separate host - container port mapping
+    network_mode: host
+
+    environment:
+      TZ: Europe/Berlin
+
+    # host path : container path
+    volumes:
+      - /home/lukas/devops_practice/solar/watchdog_test/tmp:/tmp
+
+  heartbeat-server:
+    # no building here, we just use a python image from online
+    image: python:3.12-slim
+
+    container_name: heartbeat-server
+    restart: unless-stopped
+    profiles: ["controller"]
+    # runs python's built-in http server. files in /tmp become available at http://<computer-ip>:8000/<Filename>
+    command: "python -m http.server 8000 --directory /tmp"
+
+    volumes:
+      # read only
+      - /home/lukas/devops_practice/solar/watchdog_test/tmp:/tmp:ro
+    ports:
+      # host port : container port
+      - "8000:8000"
+
+
+  watcher:
+    build: .
+    container_name: watcher
+    restart: unless-stopped
+    profiles: ["watcher"]
+    command: "python watcher.py"
+    environment:
+      TZ: Europe/Berlin
+    # this is also for local testing on just one machine - host.docker.internal resolves to ip of host machine
+    # we make use of this in watcher.py as http://host.docker.internal:8000/heartbeat.log"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
