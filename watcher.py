@@ -8,9 +8,8 @@ logging.basicConfig(
     format="%(asctime)s | %(message)s"
 )
 
-# for internal testing on one machine. later, replace it with url and port 
-HEARTBEAT_URL = "http://host.docker.internal:8000/heartbeat.log"
-#HEARTBEAT_URL = "http://<IP>:8000/heartbeat.log"
+# for internal testing on one machine: http://host.docker.internal:port
+HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
 
 MAX_AGE_SECONDS = 15
 
