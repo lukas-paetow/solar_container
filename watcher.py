@@ -12,8 +12,10 @@ logging.basicConfig(
 HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
 
 MAX_AGE_SECONDS = 15
+FAILURES_BEFORE_TAKEOVER = 5
+CHECK_INTERVAL_SECONDS = 5
 
-while True:
+def check_heartbeat():
     try:
         with urlopen(HEARTBEAT_URL, timeout=3) as response:
             lines = response.read().decode().splitlines()
@@ -24,13 +26,26 @@ while True:
         timestamp_text = non_empty_lines[-1]
         heartbeat_time = datetime.fromisoformat(timestamp_text)
         age = (datetime.now() - heartbeat_time).total_seconds()
-
-        if age > MAX_AGE_SECONDS:
-            logging.warning("Controller heartbeat is stale: %.1f seconds", age)
-        else:
-            logging.info("Controller is alive: heartbeat age %.1f seconds", age)
+        logging.info("Controller is alive: heartbeat age %.1f seconds", age)
+        return age <= MAX_AGE_SECONDS 
 
     except Exception as error:
         logging.error("Cannot reach controller: %s", error)
+        return False
 
-    time.sleep(5)
+def main() -> None:
+    failures = 0
+
+    while True:
+
+        if check_heartbeat():
+            failures = 0
+        else:
+            failures += 1
+            logging.warning("Failed heartbeat check %d/%d",failures,FAILURES_BEFORE_TAKEOVER,)
+
+
+        time.sleep(CHECK_INTERVAL_SECONDS)
+
+if __name__ == "__main__":
+    main() 
