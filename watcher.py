@@ -8,8 +8,11 @@ logging.basicConfig(
     format="%(asctime)s | %(message)s"
 )
 
+# TODO fix this with roles later
 # for internal testing on one machine: http://host.docker.internal:port
-HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
+#HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
+HEARTBEAT_URL = "http://192.168.0.22:8000/heartbeat.log" # pc address
+
 
 MAX_AGE_SECONDS = 15
 FAILURES_BEFORE_TAKEOVER = 5

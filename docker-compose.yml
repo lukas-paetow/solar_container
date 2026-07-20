@@ -48,3 +48,8 @@ services:
     # we make use of this in watcher.py as http://host.docker.internal:8000/heartbeat.log"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+
+# http://192.168.0.22:8000/heartbeat.log # pc address
+# http://192.168.0.24:8000/heartbeat.log # laptop
+
