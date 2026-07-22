@@ -44,6 +44,12 @@ services:
     command: "python watcher.py"
     environment:
       TZ: Europe/Berlin
+      REMOTE_SSH_HOST: "192.168.0.22" # TODO this needs flexibility. testing only right now
+      LOCAL_SSH_HOST: "host.docker.internal"
+      SSH_USER: "lukas"
+    volumes:
+      - /home/lukas/.ssh/watchdog_laptop_to_pc:/run/secrets/watcherkey:ro
+
     # this is also for local testing on just one machine - host.docker.internal resolves to ip of host machine
     # we make use of this in watcher.py as http://host.docker.internal:8000/heartbeat.log"
     extra_hosts:

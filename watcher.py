@@ -2,6 +2,9 @@ from datetime import datetime, timezone
 from urllib.request import urlopen
 import time
 import logging
+import os
+import shlex
+import subprocess
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,8 +18,18 @@ HEARTBEAT_URL = "http://192.168.0.22:8000/heartbeat.log" # pc address
 
 
 MAX_AGE_SECONDS = 15
-FAILURES_BEFORE_TAKEOVER = 5
+FAILURES_BEFORE_TAKEOVER = 2
 CHECK_INTERVAL_SECONDS = 5
+
+LOCAL_SSH_HOST = os.environ.get("LOCAL_SSH_HOST", "host.docker.internal")
+REMOTE_SSH_HOST = os.environ["REMOTE_SSH_HOST"]
+SSH_USER = os.environ.get("SSH_USER", "lukas")
+SSH_KEY = "/run/secrets/watcherkey"
+PROJECT_DIR = os.environ.get(
+#     "/home/lukas/devops_practice/solar/watchdog_test" # TODO needs generalization
+    "PROJECT_DIR", "/home/lukas/projects/solar/solar_container"
+)
+
 
 def check_heartbeat():
     try:
@@ -36,6 +49,42 @@ def check_heartbeat():
         logging.error("Cannot reach controller: %s", error)
         return False
 
+def compose_command(command: str) -> str:
+    return f"cd {shlex.quote(PROJECT_DIR)} && {command}"
+
+
+def ssh_command(host: str, command: str) -> subprocess.CompletedProcess[str]:
+    # returns an object with result of command
+
+    logging.info("SSH %s: %s", host, command)
+    return subprocess.run(
+        [                 
+            "ssh",
+            "-i", SSH_KEY, # key specific to me
+            "-o", "IdentitiesOnly=yes",
+            "-o", "BatchMode=yes", # no interaction prompts
+            "-o", "ConnectTimeout=5",
+            "-o", "StrictHostKeyChecking=accept-new", # avoid first-time prompt
+            f"{SSH_USER}@{host}",
+            command,
+        ],  
+        text=True, # convert any outputs into text we can use
+        capture_output=True, # don't print in terminal, capture it for us
+    )
+
+
+def takeover():
+    logging.warning("Starting takeover")
+
+    # stop controller on other machine
+    remote_stop = ssh_command(
+        REMOTE_SSH_HOST,
+        compose_command("docker compose stop controller heartbeat-server"),
+    )
+    logging.warning(remote_stop)
+
+
+
 def main() -> None:
     failures = 0
 
@@ -46,6 +95,10 @@ def main() -> None:
         else:
             failures += 1
             logging.warning("Failed heartbeat check %d/%d",failures,FAILURES_BEFORE_TAKEOVER,)
+
+            if failures >= FAILURES_BEFORE_TAKEOVER:
+                takeover()
+                return
 
 
         time.sleep(CHECK_INTERVAL_SECONDS)
