@@ -73,7 +73,21 @@ def ssh_command(host: str, command: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+
+def start_local_controller():
+    subprocess.run(
+        ["docker", "compose", "--profile", "controller", "up", "-d", "controller", "heartbeat-server"],
+        check=True,
+    )
+
+
 def takeover():
+    # stop controller on other
+    # start controller here
+    # start watcher on other
+    # stop this watcher. should happen automatically
+
+
     logging.warning("Starting takeover")
 
     # stop controller on other machine
@@ -81,7 +95,36 @@ def takeover():
         REMOTE_SSH_HOST,
         compose_command("docker compose stop controller heartbeat-server"),
     )
-    logging.warning(remote_stop)
+    logging.warning(remote_stop) # might remove this additional output
+
+
+    # end takeover here if host reachable but controller can't be stopped
+    remote_reachable = remote_stop.returncode != 255
+    if remote_reachable and remote_stop.returncode != 0:
+        logging.error("Remote host was reachable, but its controller could not be stopped: %s",
+                      remote_stop.stderr.strip())
+        return False
+
+    start_local_controller()
+
+    # if host reachable, switch to watcher profile. else just do local controller start
+    if remote_reachable:
+        remote_watcher = ssh_command(
+            REMOTE_SSH_HOST,
+            compose_command("docker compose --profile watcher up -d watcher"),
+        )
+        if remote_watcher.returncode != 0:
+            logging.error("Remote watcher could not be started: %s",
+                          remote_watcher.stderr.strip())
+    else:
+        logging.warning("Remote host is unreachable; proceeding with local takeover")
+
+
+
+
+    logging.warning("Takeover completed")
+    return True
+
 
 
 

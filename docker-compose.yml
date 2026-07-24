@@ -39,7 +39,7 @@ services:
   watcher:
     build: .
     container_name: watcher
-    restart: unless-stopped
+    restart: no # TODO needed for shutdown via ssh? fix later
     profiles: ["watcher"]
     command: "python watcher.py"
     environment:
