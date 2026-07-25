@@ -24,7 +24,7 @@ CHECK_INTERVAL_SECONDS = 5
 # only targeted to one machine. not generalized
 REMOTE_SSH_HOST = "192.168.0.22" 
 SSH_USER = "lukas"
-SSH_KEY = "/run/secrets/watcherkey"
+SSH_KEY = "/home/lukas/.ssh/watchdog_laptop_to_pc" # location in docker container
 
 PROJECT_DIR = "/home/lukas/projects/solar/solar_container"  # on other machine
 
@@ -111,7 +111,7 @@ def takeover():
     if remote_reachable:
         remote_watcher = ssh_command(
             REMOTE_SSH_HOST,
-            compose_command("docker compose --profile watcher up -d watcher"),
+            compose_command("docker compose --profile watcher up -d watcher"), # TODO needs to be replaced with local version
         )
         if remote_watcher.returncode != 0:
             logging.error("Remote watcher could not be started: %s",
