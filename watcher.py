@@ -21,14 +21,13 @@ MAX_AGE_SECONDS = 15
 FAILURES_BEFORE_TAKEOVER = 2
 CHECK_INTERVAL_SECONDS = 5
 
-LOCAL_SSH_HOST = os.environ.get("LOCAL_SSH_HOST", "host.docker.internal")
-REMOTE_SSH_HOST = os.environ["REMOTE_SSH_HOST"]
-SSH_USER = os.environ.get("SSH_USER", "lukas")
+# only targeted to one machine. not generalized
+REMOTE_SSH_HOST = "192.168.0.22" 
+SSH_USER = "lukas"
 SSH_KEY = "/run/secrets/watcherkey"
-PROJECT_DIR = os.environ.get(
-#     "/home/lukas/devops_practice/solar/watchdog_test" # TODO needs generalization
-    "PROJECT_DIR", "/home/lukas/projects/solar/solar_container"
-)
+
+PROJECT_DIR = "/home/lukas/projects/solar/solar_container"  # on other machine
+
 
 
 def check_heartbeat():
@@ -78,6 +77,7 @@ def start_local_controller():
     subprocess.run(
         ["docker", "compose", "--profile", "controller", "up", "-d", "controller", "heartbeat-server"],
         check=True,
+        cwd="/home/lukas/devops_practice/solar/watchdog_test",
     )
 
 
@@ -118,8 +118,6 @@ def takeover():
                           remote_watcher.stderr.strip())
     else:
         logging.warning("Remote host is unreachable; proceeding with local takeover")
-
-
 
 
     logging.warning("Takeover completed")
