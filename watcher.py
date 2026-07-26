@@ -48,8 +48,9 @@ def check_heartbeat():
         logging.error("Cannot reach controller: %s", error)
         return False
 
-def compose_command(command: str) -> str:
-    return f"cd {shlex.quote(PROJECT_DIR)} && {command}"
+def prep_command(command: str) -> str:
+    return f"cd {shlex.quote(PROJECT_DIR)} && {command}" # weird characters in path would break manual quotes
+
 
 
 def ssh_command(host: str, command: str) -> subprocess.CompletedProcess[str]:
@@ -93,7 +94,7 @@ def takeover():
     # stop controller on other machine
     remote_stop = ssh_command(
         REMOTE_SSH_HOST,
-        compose_command("docker compose stop controller heartbeat-server"),
+        prep_command("docker compose stop controller heartbeat-server"),
     )
     logging.warning(remote_stop) # might remove this additional output
 
@@ -107,15 +108,13 @@ def takeover():
 
     start_local_controller()
 
-    # if host reachable, switch to watcher profile. else just do local controller start
+     
     if remote_reachable:
         remote_watcher = ssh_command(
             REMOTE_SSH_HOST,
-            compose_command("docker compose --profile watcher up -d watcher"), # TODO needs to be replaced with local version
+            prep_command("nohup python watcher.py > watcher.log 2>&1 < /dev/null &"), 
+            # errors in log
         )
-        if remote_watcher.returncode != 0:
-            logging.error("Remote watcher could not be started: %s",
-                          remote_watcher.stderr.strip())
     else:
         logging.warning("Remote host is unreachable; proceeding with local takeover")
 
