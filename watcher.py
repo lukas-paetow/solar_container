@@ -5,28 +5,36 @@ import logging
 import os
 import shlex
 import subprocess
+from dotenv import load_dotenv
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(message)s"
 )
 
-# TODO fix this with roles later
+
+load_dotenv()
+
+NODE_ID = os.environ["NODE_ID"]
+HEARTBEAT_URL = os.environ["HEARTBEAT_URL"]
+REMOTE_SSH_HOST = os.environ["REMOTE_SSH_HOST"]
+SSH_KEY = Path(os.environ["SSH_KEY"])
+PROJECT_DIR = Path(os.environ["PROJECT_DIR"])
+DIR_THIS_MACHINE = os.environ["DIR_THIS_MACHINE"]
+SSH_USER = "lukas"
+
+
+
 # for internal testing on one machine: http://host.docker.internal:port
 #HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
-HEARTBEAT_URL = "http://192.168.0.22:8000/heartbeat.log" # pc address
+#HEARTBEAT_URL = "http://192.168.0.22:8000/heartbeat.log" # pc address # 
 
 
 MAX_AGE_SECONDS = 15
 FAILURES_BEFORE_TAKEOVER = 2
 CHECK_INTERVAL_SECONDS = 5
 
-# only targeted to one machine. not generalized
-REMOTE_SSH_HOST = "192.168.0.22" 
-SSH_USER = "lukas"
-SSH_KEY = "/home/lukas/.ssh/watchdog_laptop_to_pc" # location in docker container
 
-PROJECT_DIR = "/home/lukas/projects/solar/solar_container"  # on other machine
 
 
 
@@ -78,7 +86,7 @@ def start_local_controller():
     subprocess.run(
         ["docker", "compose", "--profile", "controller", "up", "-d", "controller", "heartbeat-server"],
         check=True,
-        cwd="/home/lukas/devops_practice/solar/watchdog_test",
+        cwd=DIR_THIS_MACHINE, 
     )
 
 
