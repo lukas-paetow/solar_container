@@ -6,7 +6,6 @@ import os
 import shlex
 import subprocess
 from dotenv import load_dotenv
-from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
@@ -19,8 +18,8 @@ load_dotenv()
 NODE_ID = os.environ["NODE_ID"]
 HEARTBEAT_URL = os.environ["HEARTBEAT_URL"]
 REMOTE_SSH_HOST = os.environ["REMOTE_SSH_HOST"]
-SSH_KEY = Path(os.environ["SSH_KEY"])
-PROJECT_DIR = Path(os.environ["PROJECT_DIR"])
+SSH_KEY = os.environ["SSH_KEY"]
+PROJECT_DIR = os.environ["PROJECT_DIR"]
 DIR_THIS_MACHINE = os.environ["DIR_THIS_MACHINE"]
 SSH_USER = "lukas"
 
