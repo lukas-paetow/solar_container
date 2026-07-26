@@ -6,6 +6,7 @@ import os
 import shlex
 import subprocess
 from dotenv import load_dotenv
+from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
