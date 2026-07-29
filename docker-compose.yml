@@ -1,5 +1,6 @@
 # docker-compose.yml
 services:
+  # in this demo build, 
   controller:
     build: .
     container_name: controller
@@ -17,6 +18,7 @@ services:
     volumes:
       - /home/lukas/devops_practice/solar/watchdog_test/tmp:/tmp
 
+  # makes the heartbeat file that the controller writes to available as a URL 
   heartbeat-server:
     # no building here, we just use a python image from online
     image: python:3.12-slim
@@ -32,8 +34,3 @@ services:
     ports:
       # host port : container port
       - "8000:8000"
-
-
-# http://192.168.0.22:8000/heartbeat.log # pc address
-# http://192.168.0.24:8000/heartbeat.log # laptop
-

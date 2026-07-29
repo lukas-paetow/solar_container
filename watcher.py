@@ -14,7 +14,6 @@ logging.basicConfig(
 
 
 load_dotenv()
-
 NODE_ID = os.environ["NODE_ID"]
 HEARTBEAT_URL = os.environ["HEARTBEAT_URL"]
 REMOTE_SSH_HOST = os.environ["REMOTE_SSH_HOST"]
@@ -24,20 +23,11 @@ DIR_THIS_MACHINE = os.environ["DIR_THIS_MACHINE"]
 SSH_USER = "lukas"
 
 
-
-# for internal testing on one machine: http://host.docker.internal:port
-#HEARTBEAT_URL = "http://192.168.0.24:8000/heartbeat.log"
-#HEARTBEAT_URL = "http://192.168.0.22:8000/heartbeat.log" # pc address # 
-
-
 MAX_AGE_SECONDS = 15
 FAILURES_BEFORE_TAKEOVER = 2
 CHECK_INTERVAL_SECONDS = 5
 
-
-
-
-
+# reads the heartbeat file age at the url. returns true if everything is proper and fresh
 def check_heartbeat():
     try:
         with urlopen(HEARTBEAT_URL, timeout=3) as response:
@@ -56,13 +46,14 @@ def check_heartbeat():
         logging.error("Cannot reach controller: %s", error)
         return False
 
+
+# wrapper for changing to PROJECT_DIR and executing a command. used remotely with ssh. we could move this inside ssh_command
 def prep_command(command: str) -> str:
     return f"cd {shlex.quote(PROJECT_DIR)} && {command}" # weird characters in path would break manual quotes
 
 
-
+# for remotely executing a command. requires the two computers to have exchanged ssh keys. returns an object with result of command
 def ssh_command(host: str, command: str) -> subprocess.CompletedProcess[str]:
-    # returns an object with result of command
 
     logging.info("SSH %s: %s", host, command)
     return subprocess.run(
@@ -81,7 +72,7 @@ def ssh_command(host: str, command: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-
+# local docker command for starting controller and heartbeat server. can probably remove profile keyword 
 def start_local_controller():
     subprocess.run(
         ["docker", "compose", "--profile", "controller", "up", "-d", "controller", "heartbeat-server"],
@@ -89,13 +80,12 @@ def start_local_controller():
         cwd=DIR_THIS_MACHINE, 
     )
 
-
+# switch controller and watcher role with other machine
 def takeover():
     # stop controller on other
     # start controller here
     # start watcher on other
     # stop this watcher. should happen automatically
-
 
     logging.warning("Starting takeover")
 
@@ -106,7 +96,6 @@ def takeover():
     )
     logging.warning(remote_stop) # might remove this additional output
 
-
     # end takeover here if host reachable but controller can't be stopped
     remote_reachable = remote_stop.returncode != 255
     if remote_reachable and remote_stop.returncode != 0:
@@ -115,7 +104,6 @@ def takeover():
         return False
 
     start_local_controller()
-
      
     if remote_reachable:
         remote_watcher = ssh_command(
@@ -126,13 +114,11 @@ def takeover():
     else:
         logging.warning("Remote host is unreachable; proceeding with local takeover")
 
-
     logging.warning("Takeover completed")
     return True
 
 
-
-
+# check heartbeat periodically, switch roles with other computer if stale
 def main() -> None:
     failures = 0
 
@@ -148,8 +134,8 @@ def main() -> None:
                 takeover()
                 return
 
-
         time.sleep(CHECK_INTERVAL_SECONDS)
+
 
 if __name__ == "__main__":
     main() 
