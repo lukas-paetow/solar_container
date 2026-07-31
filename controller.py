@@ -1,12 +1,11 @@
 import logging
 import time
 from pathlib import Path
-
 from datetime import datetime, timezone
 from urllib.request import urlopen
 
 LOG_FILE = "/tmp/heartbeat.log"
-INTERVAL_SECONDS = 5
+INTERVAL_SECONDS = 5 # heartbeat write frequency
 
 logging.basicConfig(
     level=logging.INFO,
@@ -15,15 +14,13 @@ logging.basicConfig(
     force=True,
 )
 
-
+# this would control the solar cells and batteries. currently just a placeholder that writes to a heartbeat file.
 def main() -> None:
     Path(LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
 
     try:
         while True:
-
             timestamp = datetime.now().isoformat()
-
             with open(LOG_FILE, "w", encoding="utf-8") as file:
                 file.write(timestamp)
 
