@@ -120,7 +120,7 @@ def takeover():
     if remote_reachable:
         remote_watcher = ssh_command(
             REMOTE_SSH_HOST,
-            prep_command("nohup python watcher.py > watcher.log 2>&1 < /dev/null &"), 
+            prep_command("nohup python watcher.py > watcher.log 2>&1 &"), 
             # errors in log
         )
     else:
