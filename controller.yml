@@ -1,0 +1,43 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller
+
+# this is the pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: controller
+  template:
+    metadata:
+      labels:
+        app: controller
+    spec:
+      containers:
+        - name: controller
+          image: controller:dev
+          imagePullPolicy: Never # only local image
+          volumeMounts:
+            - name: heartbeat
+              mountPath: /tmp
+          env:
+            - name: TZ
+              value: Europe/Berlin
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - test $(( $(date +%s) - $(stat -c %Y /tmp/heartbeat) )) -lt 15
+            initialDelaySeconds: 30 # how long to wait after startup
+            periodSeconds: 10 # frequency of executing command
+            failureThreshold: 4 # default is 3
+      volumes:
+        - name: heartbeat
+          emptyDir: {}   # shared by all containers in the pod, not visible on the host, auto deleted later
+          #hostPath:
+          #  path: /home/lukas/devops_practice/solar/watchdog_test/tmp/ # fix later
+          #  type: DirectoryOrCreate
+

@@ -5,5 +5,4 @@ WORKDIR /venus
 
 COPY controller.py .
 
-# default command that is overriden by profiles
 CMD python controller.py
