@@ -6,7 +6,7 @@ metadata:
 
 # this is the pod
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: controller
@@ -15,6 +15,7 @@ spec:
       labels:
         app: controller
     spec:
+      serviceAccountName: controller
       containers:
         - name: controller
           image: controller:dev
@@ -25,12 +26,22 @@ spec:
           env:
             - name: TZ
               value: Europe/Berlin
+
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+
           livenessProbe:
             exec:
               command:
                 - sh
                 - -c
-                - test $(( $(date +%s) - $(stat -c %Y /tmp/heartbeat) )) -lt 15
+                - test $(( $(date +%s) - $(stat -c %Y /tmp/heartbeat.log) )) -lt 15
             initialDelaySeconds: 30 # how long to wait after startup
             periodSeconds: 10 # frequency of executing command
             failureThreshold: 4 # default is 3
