@@ -104,10 +104,10 @@ def try_acquire_or_renew_lease() -> bool:
 # this would control the solar cells and batteries. currently just a placeholder that writes to a heartbeat file.
 def main() -> None:
     Path(LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
-    now = datetime.now().isoformat()
 
     try:
         while True:
+            now = datetime.now().isoformat()
             if try_acquire_or_renew_lease():
                 with open(LOG_FILE, "w", encoding="utf-8") as file:
                     file.write(now)
