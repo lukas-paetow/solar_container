@@ -4,7 +4,6 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from urllib.request import urlopen
 
-# check if I really need these
 import os
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
@@ -101,6 +100,8 @@ def try_acquire_or_renew_lease() -> bool:
             return False
         raise
 
+
+
 # this would control the solar cells and batteries. currently just a placeholder that writes to a heartbeat file.
 def main() -> None:
     Path(LOG_FILE).parent.mkdir(parents=True, exist_ok=True)
@@ -108,13 +109,17 @@ def main() -> None:
     try:
         while True:
             now = datetime.now().isoformat()
-            if try_acquire_or_renew_lease():
-                with open(LOG_FILE, "w", encoding="utf-8") as file:
-                    file.write(now)
 
-                logging.info("watchdog heartbeat: %s", now)
+            # for general liveness check of this given pod
+            with open(LOG_FILE, "w", encoding="utf-8") as file:
+                file.write(now)
+
+            if try_acquire_or_renew_lease():
+                logging.info("active controller: %s", now)
+                # this is where controller actions would go for true system
             else:
-                logging.info("not active")
+                logging.info("not active: %s", now)
+
             time.sleep(INTERVAL_SECONDS)
 
     except KeyboardInterrupt:
