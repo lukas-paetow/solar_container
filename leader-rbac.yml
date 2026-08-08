@@ -1,3 +1,5 @@
+# create controller identity, create role of the lease, then connect them
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
